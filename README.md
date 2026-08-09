@@ -1,65 +1,48 @@
-# Itemku Price Bot - Phase 0 Revision 2
+# Itemku Price Bot - Phase 1 · Product Manager
 
-## Goal
+Phase 1 is **READ-ONLY**.
 
-Phase 0 only handles persistent Tokoku/Google login.
+It preserves the locked Phase 0 login architecture:
+- normal installed Google Chrome
+- direct `https://tokoku.itemku.com/login`
+- manual Google OAuth
+- persistent profile in `browser/profile`
+- Playwright connects to Chrome via CDP
 
-This revision does **not** let Playwright launch Chromium/Chrome for Testing.
-Instead:
+After login, Phase 1 opens:
 
-1. The installed Google Chrome (`chrome.exe`) is launched directly.
-2. Chrome uses a dedicated local profile under `browser\profile`.
-3. Playwright connects to that already-running Chrome through CDP.
-4. You manually perform the Google OAuth login.
-5. The profile is reused on future runs.
+```text
+https://tokoku.itemku.com/dagangan
+```
 
-This avoids using Playwright's bundled Chromium/Chrome for Testing.
+It attempts to discover product/listing candidates and filter products with
+`stock > 0`.
+
+## Important
+
+This phase does **not**:
+- change prices
+- change stock
+- click save/update
+- scan itemku.com competitors
+
+Raw page data is saved under `debug/` to let us harden selectors against the
+actual Tokoku page before moving to the next phase.
 
 ## Setup
 
 ```cmd
 python -m pip install -r requirements.txt
+python main.py
 ```
 
 No `playwright install chromium` is required.
 
-Run:
+## Output
 
-```cmd
-python main.py
-```
+- `data/products.json`
+- `debug/dagangan_text.txt`
+- `debug/dagangan.html`
+- `debug/dagangan.png`
 
-The browser opens directly at:
-
-```text
-https://tokoku.itemku.com/login
-```
-
-Then manually click **Login dengan Google** and complete the login.
-
-## Important
-
-Use the dedicated Chrome window opened by the script. Do not use your normal everyday Chrome profile for this bot.
-
-The session is stored locally in:
-
-```text
-browser\profile\
-```
-
-Do NOT upload or share that directory.
-
-Do not put Google passwords, OTP codes, or 2FA secrets into the project.
-
-## Git
-
-Recommended `.gitignore` entries:
-
-```gitignore
-browser/profile/
-__pycache__/
-*.pyc
-.env
-logs/
-data/local/
-```
+`browser/profile/` must never be committed to GitHub.
