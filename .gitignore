@@ -1,6 +1,6 @@
 browser/profile/
 __pycache__/
 *.pyc
-logs/
-data/*.json
 .env
+logs/
+data/local/

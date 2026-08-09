@@ -1,62 +1,62 @@
 from pathlib import Path
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
-BASE_DIR = Path(__file__).resolve().parent
-PROFILE_DIR = BASE_DIR / "browser" / "profile"
-TOKOKU_URL = "https://tokoku.itemku.com/"
-PROFILE_DIR.mkdir(parents=True, exist_ok=True)
+LOGIN_URL = "https://tokoku.itemku.com/login"
+PROFILE_DIR = Path(__file__).parent / "browser" / "profile"
 
+def is_logged_in(page):
+    if "tokoku.itemku.com/login" not in page.url.lower():
+        return True
+    try:
+        return page.get_by_text("Daganganku", exact=True).count() > 0
+    except Exception:
+        return False
 
 def main():
-    print("=" * 58)
-    print("           ITEMKU PRICE BOT - PHASE 0")
-    print("        Persistent Google Login / Browser Session")
-    print("=" * 58)
-    print(f"[i] Profile : {PROFILE_DIR}")
-    print("[i] Browser : Chromium / Playwright")
-    print()
-    print("Phase 0 TIDAK menyimpan password Google.")
-    print("Login, OTP/2FA, atau CAPTCHA tetap dilakukan manual.")
-    print()
+    print("=== ITEMKU PRICE BOT - PHASE 0 ===")
+    print("Browser: Google Chrome (installed on this PC)")
+    print(f"Login URL: {LOGIN_URL}\n")
+
+    PROFILE_DIR.mkdir(parents=True, exist_ok=True)
 
     with sync_playwright() as p:
+        print("[→] Opening Google Chrome...")
         context = p.chromium.launch_persistent_context(
             user_data_dir=str(PROFILE_DIR),
+            channel="chrome",
             headless=False,
-            viewport={"width": 1365, "height": 900},
+            viewport=None,
             args=["--start-maximized"],
         )
 
         page = context.pages[0] if context.pages else context.new_page()
-        print("[→] Membuka Tokoku...")
-        page.goto(TOKOKU_URL, wait_until="domcontentloaded", timeout=60000)
+
+        print("[→] Opening Tokoku login...")
+        page.goto(LOGIN_URL, wait_until="domcontentloaded")
+
+        print("\nIf you are not logged in:")
+        print("  1. Login to Tokoku using Google manually.")
+        print("  2. Complete OTP / 2FA / CAPTCHA if Google asks.")
+        print("  3. Make sure you are back inside your Tokoku seller account.\n")
+
+        input("Press ENTER after login is complete...")
 
         try:
-            page.wait_for_load_state("networkidle", timeout=15000)
-        except Exception:
+            page.wait_for_load_state("domcontentloaded", timeout=10000)
+        except PlaywrightTimeoutError:
             pass
+        page.wait_for_timeout(1500)
 
-        print("[✓] Browser terbuka.")
-        print()
-        print("Jika belum login:")
-        print("  1. Login Tokoku menggunakan Google secara manual.")
-        print("  2. Selesaikan OTP/2FA/CAPTCHA jika diminta Google.")
-        print("  3. Pastikan kamu sudah masuk ke akun seller Tokoku.")
-        print()
-        print("Jika sudah login dari run sebelumnya, cukup pastikan halaman sudah terbuka.")
-        input("Tekan ENTER untuk menyimpan session dan menutup browser... ")
+        if is_logged_in(page):
+            print("[✓] Login/session detected.")
+            print("[✓] Persistent browser profile is saved.")
+            print(f"[✓] Profile: {PROFILE_DIR}")
+        else:
+            print("[!] The browser still appears to be on the login page.")
+            print("[!] Session was kept, but Phase 0 cannot confirm login yet.")
 
-        # Menunggu sebentar agar perubahan cookie/storage selesai ditulis.
-        page.wait_for_timeout(1000)
-
-        print()
-        print("[✓] Session/profile tersimpan.")
-        print(f"[✓] Lokasi profile: {PROFILE_DIR}")
-        print("[i] Run berikutnya akan memakai profile yang sama.")
-        print("[i] Jangan bagikan folder browser/profile karena berisi session browser.")
-
+        input("\nPress ENTER to close the browser...")
         context.close()
-
 
 if __name__ == "__main__":
     main()
