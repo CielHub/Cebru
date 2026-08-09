@@ -1,8 +1,19 @@
-# Itemku Price Bot - Phase 0
+# Itemku Price Bot - Phase 0 Revision 2
 
-Phase 0 handles persistent Google/Tokoku login only.
+## Goal
 
-This version launches the **Google Chrome installed on the PC** using Playwright's `channel="chrome"`, not Playwright's bundled Chromium/Chrome for Testing.
+Phase 0 only handles persistent Tokoku/Google login.
+
+This revision does **not** let Playwright launch Chromium/Chrome for Testing.
+Instead:
+
+1. The installed Google Chrome (`chrome.exe`) is launched directly.
+2. Chrome uses a dedicated local profile under `browser\profile`.
+3. Playwright connects to that already-running Chrome through CDP.
+4. You manually perform the Google OAuth login.
+5. The profile is reused on future runs.
+
+This avoids using Playwright's bundled Chromium/Chrome for Testing.
 
 ## Setup
 
@@ -10,7 +21,7 @@ This version launches the **Google Chrome installed on the PC** using Playwright
 python -m pip install -r requirements.txt
 ```
 
-You do **not** need `playwright install chromium` for this version.
+No `playwright install chromium` is required.
 
 Run:
 
@@ -18,17 +29,37 @@ Run:
 python main.py
 ```
 
-First run:
-1. Chrome opens.
-2. Bot opens `https://tokoku.itemku.com/login`.
-3. Login with Google manually.
-4. Complete OTP/2FA/CAPTCHA yourself if requested.
-5. Return to CMD and press ENTER.
-6. The persistent browser profile is saved under `browser\profile`.
+The browser opens directly at:
 
-Later runs reuse that profile.
+```text
+https://tokoku.itemku.com/login
+```
 
-## Security
+Then manually click **Login dengan Google** and complete the login.
 
-Never upload or share `browser\profile\`. It contains the browser session.
-Do not store Google passwords, OTP codes, or 2FA secrets in the project.
+## Important
+
+Use the dedicated Chrome window opened by the script. Do not use your normal everyday Chrome profile for this bot.
+
+The session is stored locally in:
+
+```text
+browser\profile\
+```
+
+Do NOT upload or share that directory.
+
+Do not put Google passwords, OTP codes, or 2FA secrets into the project.
+
+## Git
+
+Recommended `.gitignore` entries:
+
+```gitignore
+browser/profile/
+__pycache__/
+*.pyc
+.env
+logs/
+data/local/
+```
