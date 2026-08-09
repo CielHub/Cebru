@@ -1,0 +1,5 @@
+{
+  "tokoku_url": "https://tokoku.itemku.com/",
+  "headless": false,
+  "profile_dir": "browser/profile"
+}
